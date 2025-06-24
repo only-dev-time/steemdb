@@ -1,68 +1,129 @@
+# Steem Blockchain Dual-Sync Service
 
-# Steem Blockchain Sync Script
+A high-performance, resilient Python service to synchronize the **Steem Blockchain** into **MongoDB**, supporting **real-time streaming** and **full historical backfill**. Designed for developers and data engineers needing reliable, up-to-date access to blockchain data.
 
-## 📝 Overview
+---
 
-This Python script is designed to synchronize a MongoDB database with the Steem blockchain by fetching and processing blocks. The script has been optimized to fetch historical blocks in batches of 50, and once reaching the head block, it switches to fetching one block every 3 seconds with retry logic on RPC failure. This approach significantly speeds up the synchronization process, achieving up to 60% faster sync times in test scenarios.
+## 🚀 Overview
 
-## ✨ Features
+This service employs a **dual-sync architecture**:
 
-- ⚡ Fetches historical blocks in batches for faster synchronization.
-- 🔄 Switches to single block fetching mode at the head block for real-time updates.
-- 🛠️ Robust retry mechanism on RPC failures to ensure continuous operation.
-- 📦 Processes various operations within blocks and updates MongoDB collections accordingly.
+* **Real-Time Streamer**: Continuously captures new blocks as they become irreversible.
+* **Reverse Historical Worker**: Concurrently backfills historical blocks from the current point to genesis.
 
-## 🔍 Differences Between Old and New Code
+Key features include **parallelized fetching**, **node failover**, **automatic resume on restart**, and **data integrity with unique indexing**.
 
-### Old Code
+---
 
-- 🚶 Processed blocks one at a time.
-- 🔧 Relied on environment variables for configuration.
-- 🐢 Less efficient in handling historical block synchronization.
+## 🧠 Core Features
 
-### New Code
+### 1. Dual-Sync Architecture
 
-- 🗂️ **Batch Processing**: Fetches historical blocks in batches of 50, significantly reducing the time required to synchronize the blockchain.
-- 🔄 **Retry Logic**: Implements retry logic for RPC failures to ensure continuous and reliable operation.
-- 📁 **Configuration Management**: Moved from environment variable-based configuration to a `config.json` file for easier management and flexibility.
-- 🚀 **Performance Improvement**: Achieved up to 60% faster sync times in test scenarios due to batch processing and improved error handling.
+* **Real-Time Streamer (Main Thread)**
+  Watches for `last_irreversible_block_num` and streams live blocks into MongoDB.
 
-## 🚀 Running the Script
+* **Reverse Historical Worker (Background Thread)**
+  Concurrently fetches past blocks down to block #1 without affecting the live stream.
 
-### Using Docker
+### 2. Parallel Fetching & Failover
 
-1. **Build the Docker Image**:
-    ```sh
-    docker build -t steemdb_sync .
-    ```
+* **Multi-Node Support**: Rotates through nodes in `config.py`.
+* **Thread Pooling**: Fetches blocks in batches using `ThreadPoolExecutor`.
+* **Automatic Failover**: Re-attempts failed batches using alternate nodes.
 
-2. **Run the Docker Container**:
-    ```sh
-    docker run -d --name steem-sync-container steemdb_sync
-    ```
+### 3. Intelligent Resume on Restart
 
-### 🛠️ Configuration
+* Maintains `stream_status` and `reverse_sync_status` in MongoDB.
+* Seamlessly resumes both real-time and historical sync from the last synced block.
 
-Modify the `config.json` file with the appropriate settings before running the Docker container. Example `config.json`:
+### 4. Data Model & Integrity
 
-```json
-{
-    "mongodb_url": "mongodb://10.10.100.30:27017/",
-    "steemd_url": "http://10.10.100.12:8080",
-    "last_block_env": 78090042,
-    "batch_size": 50
-}
+* Stores full raw block data with virtual operations (`virtual_ops`).
+* Enforces a unique index on `block_num` to prevent duplicates.
+* Utilizes native MongoDB `_id` for efficient, non-blocking inserts.
+
+---
+
+## 🧰 Prerequisites
+
+Install required Python libraries:
+
+```bash
+pip install -r requirements.txt
 ```
 
-- `mongodb_url`: The connection string to your MongoDB instance.
-- `steemd_url`: The URL of the Steem node you are connecting to.
-- `last_block_env`: The block number to start synchronization from.
-- `batch_size`: Number of blocks to fetch in one batch (default is 50).
+---
 
-## 🤝 Contributing
+## ⚙️ Configuration
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue on GitHub.
+All settings are located in `config.py`:
 
-## 📜 License
+| Key                   | Description                               |
+| --------------------- | ----------------------------------------- |
+| `steemd_nodes`        | List of public Steem nodes                |
+| `mongodb_url`         | MongoDB connection string                 |
+| `db_name`             | Target MongoDB database name              |
+| `collection_name`     | MongoDB collection for storing blocks     |
+| `parallel_batch_size` | Batch size per thread for historical sync |
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+---
+
+## 💪 Running the Script
+
+Run the script from the terminal:
+
+```bash
+python blocks.py
+```
+
+Logs will be output to both the console and configured log files.
+
+---
+
+## 🔄 How It Works: Walkthrough
+
+### On First Run:
+
+1. Connects to MongoDB and the Steem network.
+2. Fetches `last_irreversible_block_num` (e.g., 97,000,000) and begins streaming.
+3. Initializes `stream_status` and launches `ReverseHistoricalWorker`.
+4. Historical worker starts syncing from 96,999,999 down to block #1.
+
+### On Restart:
+
+1. Loads `stream_status` and resumes real-time streaming.
+2. Loads `reverse_sync_status` and resumes historical backfill.
+3. Both processes continue from where they left off.
+
+---
+
+## 📁 Data Structure
+
+* Each document in `Blocks` collection contains:
+
+  * `block_num`: Block height
+  * `raw_block`: Raw block data
+  * `virtual_ops`: Array of virtual operations
+  * `_id`: Auto-generated MongoDB ObjectId
+
+---
+
+## 📢 Notes
+
+* Ensure MongoDB is running and accessible before starting the script.
+* More Steem nodes in the config = better reliability and speed.
+* Customize logging behavior in `config.py` if needed.
+
+---
+
+## ✅ License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 📖 References
+
+* [Steem Developer Docs](https://developers.steem.io)
+* [pymongo](https://pymongo.readthedocs.io)
+* [Python ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor)
