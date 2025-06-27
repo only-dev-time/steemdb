@@ -1,0 +1,75 @@
+export const getOperationIcon = (type) => {
+  switch (type) {
+    case 'transfer':
+      return '⟿';
+    case 'transfer_to_vesting':
+      return '⚡';
+    case 'withdraw_vesting':
+      return '💸';
+    case 'comment':
+      return '✍️';
+    case 'vote':
+      return '👍';
+    case 'claim_reward_balance':
+      return '🎁';
+    case 'claim_account':
+      return '🎫';
+    case 'create_claimed_account':
+      return '👤';
+    case 'account_update':
+      return '⚙️';
+    case 'account_witness_vote':
+      return '🗳️';
+    case 'account_witness_proxy':
+      return '🔗';
+    case 'custom_json':
+      return '📄';
+    case 'feed_publish':
+      return '📡';
+    case 'limit_order_create':
+    case 'limit_order_cancel':
+      return '📊';
+    case 'delegate_vesting_shares':
+      return '🤝';
+    case 'escrow_transfer':
+    case 'escrow_approve':
+    case 'escrow_dispute':
+    case 'escrow_release':
+      return '🔒';
+    case 'proposal_create':
+    case 'proposal_update':
+    case 'proposal_vote':
+      return '📋';
+    case 'witness_update':
+      return '✅';
+    // Virtual operations
+    case 'producer_reward':
+      return '🏗️';
+    case 'curation_reward':
+      return '🎯';
+    case 'author_reward':
+      return '✒️';
+    case 'comment_reward':
+      return '💬';
+    case 'interest':
+      return '💰';
+    case 'fill_vesting_withdraw':
+      return '🏦';
+    case 'fill_order':
+      return '✅';
+    case 'effective_comment_vote':
+      return '👍';
+    case 'ineffective_delete_comment':
+      return '❌';
+    case 'liquidity_reward':
+      return '💧';
+    case 'fill_convert_request':
+      return '🔄';
+    case 'comment_benefactor_reward':
+      return '🎁';
+    case 'return_vesting_delegation':
+      return '↩️';
+    default:
+      return '⚙️';
+  }
+};
