@@ -1,6 +1,6 @@
 {
-    "mongodb_url": "mongodb://localhost:27017/",
-    "steemd_url": "http://localhost:8080",
+    "mongodb_url": "mongodb://mongo:27017/",
+    "steemd_url": "http://steem_testnet:18091",
     "last_block_env": 1,
     "batch_size": 50
 }
