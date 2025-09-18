@@ -45,9 +45,10 @@ services:
 
   mongodata:
     image: mongo:3.6
+    command: ["true"]
     restart: unless-stopped
     volumes:
-      - ~/mongo/data:/data/db
+      - ./mongo/data:/data/db
     # ports:
     #   - "27017:27017"
     # command: --smallfiles --nojournal
