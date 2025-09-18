@@ -1,5 +1,5 @@
 # config.py
-
+import os
 
 CONFIG = {
     # --- Node Configuration ---
@@ -13,13 +13,12 @@ CONFIG = {
         "https://api2.justyy.com",
         "https://api.steemitdev.com",
        	"https://api.steememory.com",
-#        "https://api.cotina.org/",
     ],
 
     # --- Database Configuration ---
-    "mongodb_url": "mongodb://host.docker.internal:27017/",
-    "db_name": "BlazeDB",
-    "collection_name": "Blocks",
+    "mongodb_url": os.getenv("MONGODB_URL", "mongodb://host.docker.internal:27017/"),
+    "db_name": os.getenv("DB_NAME", "SteemDB"),
+    "collection_name": "SteemData",
 
     # The number of blocks each worker thread will fetch in a single batch during parallel sync.
     "parallel_batch_size": 50,
@@ -33,3 +32,9 @@ CONFIG = {
     "log_file": "blocks_sync.log",
     "error_log_file": "blocks_error.log"
 }
+
+# Override steemd_nodes if STEEMD_URL environment variable is set
+STEEMD_URL = os.getenv("STEEMD_URL", None)
+if STEEMD_URL:
+    # if STEEMD_URL is set, replace the list
+    CONFIG["steemd_nodes"] = [STEEMD_URL]

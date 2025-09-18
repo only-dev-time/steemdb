@@ -20,7 +20,12 @@ services:
     build: ./docker/sync
     restart: on-failure
     volumes:
-      - ./docker/sync:/src
+      - ./docker/sync:/app
+    environment:
+      - STEEMD_URL=http://host.docker.internal:18091
+      - MONGODB_URL=mongodb://mongo:27017/
+      - DB_NAME=SteemTestnetDB
+      - LOG_LEVEL=INFO
     depends_on:
       - mongo
   witnesses:
@@ -45,7 +50,7 @@ services:
 
   mongodata:
     image: mongo:3.6
-    command: ["true"]
+    command: ["tail", "-f", "/dev/null"]
     restart: unless-stopped
     volumes:
       - ./mongo/data:/data/db
