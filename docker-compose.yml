@@ -22,12 +22,14 @@ services:
     volumes:
       - ./docker/sync:/app
     environment:
-      - STEEMD_URL=http://host.docker.internal:18091
+      - STEEMD_URL=http://steem_testnet:8091
       - MONGODB_URL=mongodb://mongo:27017/
       - DB_NAME=SteemTestnetDB
       - LOG_LEVEL=INFO
     depends_on:
       - mongo
+    networks:
+      - dockernet
   witnesses:
     build: ./docker/witnesses
     restart: on-failure
@@ -54,6 +56,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./mongo/data:/data/db
+    networks:
+      - dockernet
     # ports:
     #   - "27017:27017"
     # command: --smallfiles --nojournal
@@ -63,9 +67,11 @@ services:
     restart: unless-stopped
     volumes_from:
       - mongodata
+    networks:
+      - dockernet
     # ports:
     #   - "27017:27017"
 
 networks:
-    dockernet:
-        external: true
+  dockernet:
+    external: true
